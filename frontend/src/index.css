@@ -14,12 +14,14 @@
 }
 
 /* 1. Global Reset & Centering */
-/** {*/
-/*  box-sizing: border-box;*/
-/*  margin: 0;*/
-/*  padding: 0;*/
-/*  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;*/
-/*}*/
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  overflow-x: hidden; /* prevent horizontal scroll caused by 100vw */
+}
+* { box-sizing: inherit; }
 
 body {
   background-color: #f0f2f5; /* Light grey background */
@@ -191,4 +193,129 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+/* Styles for SweetDashboard component moved from inline styles */
+.sweet-container { padding: 16px; font-family: Arial, sans-serif; }
+.sweet-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.sweet-left-header { flex: 0 0 auto; }
+.sweet-left-header h1 { margin: 0; }
+.sweet-controls { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+.sweet-pagination-wrapper { align-self: stretch; }
+.sweet-search-filter-row { display: flex; gap: 8px; align-items: center; }
+.sweet-search-input { flex: 1; padding: 8px 10px; border-radius: 4px; border: 1px solid #ccc; }
+.sweet-main { margin-top: 18px; }
+.sweet-grid { display: grid; grid-template-columns: 1fr; gap: 8px; width: 100%; }
+.sweet-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #fff;
+  padding: 10px 12px;
+  gap: 12px;
+}
+.sweet-card-name { flex: 1 1 auto; font-weight: 600; color: #111; }
+.sweet-card-category { flex: 0 0 220px; color: #555; text-align: left; }
+.sweet-card-price { flex: 0 0 140px; text-align: right; font-weight: 700; color: #111; }
+.sweet-card { width: 100%; box-sizing: border-box; }
+.sweet-img { display: none; }
+.sweet-card-body { padding: 0; }
+.sweet-pagination { display: flex; gap: 6px; align-items: center; }
+.sweet-active-page { font-weight: bold; text-decoration: underline; }
+.sweet-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+.sweet-modal { background: #f7f8fb; padding: 18px; border-radius: 8px; min-width: 300px; box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+.sweet-modal h3,
+.sweet-modal label { color: #111; }
+.sweet-input { display: block; width: 100%; padding: 8px; margin-top: 6px; box-sizing: border-box; color: #111; background: #fff; }
+.sweet-modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* Layout tweaks: make content flow top -> main -> bottom pagination */
+.sweet-container {
+  max-width: 1100px;
+  width: 100%;
+  margin: 24px auto; /* center horizontally within page */
+  padding: 16px;
+  box-sizing: border-box;
+}
+.sweet-header { align-items: center; }
+.sweet-controls { gap: 8px; }
+.sweet-search-filter-row { display: flex; gap: 8px; align-items: center; width: 100%; }
+.search-actions { display: flex; align-items: center; gap: 8px; }
+.sweet-pagination-wrapper-bottom { margin-top: 18px; display: flex; justify-content: center; }
+
+/* Ensure grid takes available width and pagination stays bottom */
+.sweet-main { margin-top: 12px; }
+.sweet-grid { width: 100%; }
+
+/* --- SweetDashboard layout improvements --- */
+.sweet-dashboard-layout {
+  position: fixed;
+  inset: 0; /* top:0; right:0; bottom:0; left:0; */
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  padding: 0; /* full-bleed from every side */
+  box-sizing: border-box;
+  overflow-y: auto; /* Allow vertical scrolling */
+}
+/* Optional inner wrapper to keep visual padding while layout stays full-bleed */
+.sweet-dashboard-inner {
+  padding: 0; /* make content span edge-to-edge */
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  box-sizing: border-box;
+}
+.sweet-dashboard-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  margin-bottom: 18px;
+  flex-shrink: 0; /* Prevent shrinking */
+}
+.sweet-dashboard-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin: 0;
+  color: #2d2d2d;
+  flex-shrink: 0;
+}
+.sweet-dashboard-searchbar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  max-width: 500px; /* Limit search bar width */
+}
+.sweet-main {
+  flex: 1; /* Take available space to center the grid */
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Center content vertically if needed */
+  margin-top: 12px;
+}
+.sweet-grid {
+  display: grid;
+  grid-template-columns: 1fr; /* single column so cards span full width */
+  gap: 8px;
+  width: 100%;
+}
+.sweet-pagination-wrapper-bottom {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
+  flex-shrink: 0; /* Prevent shrinking */
 }

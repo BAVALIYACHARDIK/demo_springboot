@@ -23,13 +23,11 @@ export function Register() {
                 setPassword('');
                 // Optional: Redirect to login after 2 seconds so they see the success message
                 setTimeout(() => {
-                    navigate('/auth/login');
-                }, 2000);
+                    navigate('/SweetDashboard');
+                }, 1000);
             }
             console.log('register response', response);
-            // if(response){
-            //     navigate('/sweet');
-            // }
+
         } catch (err) {
             setStatus({ ok: false, error: err.message || err });
             console.error(err);

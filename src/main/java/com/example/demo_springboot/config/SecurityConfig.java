@@ -33,6 +33,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 1. Public endpoints
                         .requestMatchers("/api/auth/**", "/error").permitAll()
+                        .requestMatchers("/api/sweets/**", "/error").permitAll()
+
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         // 2. Admin endpoints (Requires ROLE_ADMIN set in the filter)

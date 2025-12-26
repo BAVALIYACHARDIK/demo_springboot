@@ -19,11 +19,10 @@ export function Login(){
                 setEmail('');
                 setPassword('');
                 setStatus({ ok: true, data: response });
+                navigate('/SweetDashboard');
             }
             console.log('login response', response);
-            // if(response){
-            //     navigate('/sweet');
-            // }
+
         } catch (err) {
             setStatus({ ok: false, error: err.message || err });
             console.error(err);
