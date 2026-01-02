@@ -13,6 +13,8 @@ import java.util.HashSet;
 
 import com.example.demo_springboot.model.Hashtag;
 import com.example.demo_springboot.model.User;
+import com.example.demo_springboot.model.Community;
+import com.example.demo_springboot.model.Flag;
 
 @Entity
 @Table(name = "posts")
@@ -42,6 +44,14 @@ public class Post {
     @ManyToMany
     @JoinTable(name = "posts_hashtags", joinColumns = @JoinColumn(name = "post_id"), inverseJoinColumns = @JoinColumn(name = "hashtag_id"))
     private Set<Hashtag> hashtags = new HashSet<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "community_id")
+    private Community community;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "flag_id")
+    private Flag flag;
 
     @PrePersist
     void prePersist() {

@@ -72,4 +72,24 @@ public class DashboardController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
+    // GET /api/communities
+    @GetMapping("/communities")
+    public ResponseEntity<List<Map<String, Object>>> getAllCommunities() {
+        return ResponseEntity.ok(dashboardService.getAllCommunities());
+    }
+
+    // GET /api/communities/paginated?page=0&size=15
+    @GetMapping("/communities/paginated")
+    public ResponseEntity<Map<String, Object>> getCommunitiesPaginated(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "15") int size) {
+        return ResponseEntity.ok(dashboardService.getCommunitiesPaginated(page, size));
+    }
+
+    // GET /api/flags
+    @GetMapping("/flags")
+    public ResponseEntity<List<Map<String, Object>>> getAllFlags() {
+        return ResponseEntity.ok(dashboardService.getAllFlags());
+    }
 }

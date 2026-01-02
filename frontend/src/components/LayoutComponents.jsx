@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import API from '../services/Dashboardapi';
 
 export function Navbar({ query, setQuery, onSearch, onLogout }) {
   return (
@@ -63,18 +64,48 @@ export function LeftSidebar() {
 }
 
 export function RightSidebar({ onAddPost }) {
-  const communities = [
-    { name: "JavaScript", members: "2,456,789", icon: "🟨" },
-    { name: "Python", members: "1,987,654", icon: "🐍" },
-    { name: "Java", members: "1,543,210", icon: "☕" },
-    { name: "C++", members: "987,432", icon: "⚙️" },
-    { name: "TypeScript", members: "876,543", icon: "🔷" },
-    { name: "Rust", members: "654,321", icon: "🦀" },
-    { name: "Go", members: "543,210", icon: "🐹" },
-    { name: "C#", members: "432,109", icon: "#️⃣" },
-    { name: "Ruby", members: "321,098", icon: "💎" },
-    { name: "Swift", members: "298,765", icon: "🍎" }
-  ];
+  const [communities, setCommunities] = useState([]);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const listRef = useRef(null);
+
+  // Load initial communities
+  useEffect(() => {
+    loadCommunities(0);
+  }, []);
+
+  const loadCommunities = async (pageNumber) => {
+    if (loading) return;
+    
+    setLoading(true);
+    try {
+      const response = await API.getCommunitiesPaginated(pageNumber, 15);
+      
+      if (pageNumber === 0) {
+        setCommunities(response.content || []);
+      } else {
+        setCommunities(prev => [...prev, ...(response.content || [])]);
+      }
+      
+      setHasMore(response.hasNext || false);
+      setPage(pageNumber);
+    } catch (e) {
+      console.error('Failed to load communities', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle scroll event for infinite loading
+  const handleScroll = (e) => {
+    const element = e.target;
+    const bottom = element.scrollHeight - element.scrollTop <= element.clientHeight + 50;
+    
+    if (bottom && hasMore && !loading) {
+      loadCommunities(page + 1);
+    }
+  };
 
   return (
     <aside className="right-sidebar">
@@ -84,20 +115,27 @@ export function RightSidebar({ onAddPost }) {
       
       <div className="communities-widget">
         <div className="widget-header">POPULAR COMMUNITIES</div>
-        <div className="communities-list">
-          {communities.map((community, idx) => (
-            <a href="#" key={idx} className="community-item">
+        <div 
+          className="communities-list" 
+          ref={listRef}
+          onScroll={handleScroll}
+        >
+          {communities.map((community) => (
+            <a href="#" key={community.id} className="community-item">
               <div className="community-info">
-                <span className="community-icon">{community.icon}</span>
                 <div className="community-details">
                   <div className="community-name">{community.name}</div>
-                  <div className="community-members">{community.members} members</div>
                 </div>
               </div>
             </a>
           ))}
+          {loading && (
+            <div className="loading-more">Loading more...</div>
+          )}
+          {!hasMore && communities.length > 0 && (
+            <div className="no-more">No more communities</div>
+          )}
         </div>
-        <a href="#" className="see-more">See more</a>
       </div>
     </aside>
   );

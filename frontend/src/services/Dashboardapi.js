@@ -74,6 +74,21 @@ export async function createComment(payload = {}, { signal } = {}) {
 	});
 }
 
+export async function getAllCommunities({ signal } = {}) {
+	return await request(`${BASE}/communities`, { method: "GET", signal });
+}
+
+export async function getCommunitiesPaginated(page = 0, size = 15, { signal } = {}) {
+	const params = new URLSearchParams();
+	params.set("page", String(page));
+	params.set("size", String(size));
+	return await request(`${BASE}/communities/paginated?${params.toString()}`, { method: "GET", signal });
+}
+
+export async function getAllFlags({ signal } = {}) {
+	return await request(`${BASE}/flags`, { method: "GET", signal });
+}
+
 export default {
 	createPost,
 	search,
@@ -82,4 +97,7 @@ export default {
 	getPostComments,
 	getCommentChildren,
 	createComment,
+	getAllCommunities,
+	getCommunitiesPaginated,
+	getAllFlags,
 };

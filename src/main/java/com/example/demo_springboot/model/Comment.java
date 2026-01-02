@@ -53,7 +53,7 @@ public class Comment {
     @EqualsAndHashCode.Exclude
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> replies = new ArrayList<>();
-
+    
     @PrePersist
     void prePersist() {
         if (createdAt == null)

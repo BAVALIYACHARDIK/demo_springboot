@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import API from '../services/Dashboardapi';
 
+// Helper function to get flag icon
+const getFlagIcon = (flagName) => {
+  const flagIcons = {
+    "Error": "🔴",
+    "Doubt": "❓",
+    "Meme": "😂",
+    "How To": "📖",
+  };
+  return flagIcons[flagName] || "🏳️";
+};
+
 export function PostDetail({ postId, onBack }) {
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
@@ -208,13 +219,18 @@ export function PostDetail({ postId, onBack }) {
 
           <h1 className="post-detail-title">{post.title}</h1>
 
-          {post.hashtags && post.hashtags.length > 0 && (
-            <div className="post-tags">
-              {post.hashtags.map((tag, i) => (
-                <span key={i} className="tag">{tag.name}</span>
-              ))}
-            </div>
-          )}
+          <div className="post-detail-meta-info">
+            {post.community && (
+              <div className="post-community">
+                <span className="meta-value community-badge">{post.community.name}</span>
+              </div>
+            )}
+            {post.flag && (
+              <div className="post-flag">
+                <span className="meta-value flag-badge">{getFlagIcon(post.flag.name)} {post.flag.name}</span>
+              </div>
+            )}
+          </div>
 
           <div className="post-detail-body">{post.body}</div>
 

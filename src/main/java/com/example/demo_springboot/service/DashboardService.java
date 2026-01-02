@@ -4,10 +4,18 @@ import com.example.demo_springboot.model.Comment;
 import com.example.demo_springboot.model.Hashtag;
 import com.example.demo_springboot.model.Post;
 import com.example.demo_springboot.model.User;
+import com.example.demo_springboot.model.Community;
+import com.example.demo_springboot.model.Flag;
 import com.example.demo_springboot.repository.CommentRepository;
 import com.example.demo_springboot.repository.PostRepository;
 import com.example.demo_springboot.repository.HashtagRepository;
+import com.example.demo_springboot.repository.CommunityRepository;
+import com.example.demo_springboot.repository.FlagRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.util.*;
 
@@ -17,13 +25,18 @@ public class DashboardService {
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
     private final HashtagRepository hashtagRepository;
+    private final CommunityRepository communityRepository;
+    private final FlagRepository flagRepository;
     private final com.example.demo_springboot.repository.UserRepository userRepository;
 
     public DashboardService(PostRepository postRepository, CommentRepository commentRepository,
-            HashtagRepository hashtagRepository, com.example.demo_springboot.repository.UserRepository userRepository) {
+            HashtagRepository hashtagRepository, CommunityRepository communityRepository,
+            FlagRepository flagRepository, com.example.demo_springboot.repository.UserRepository userRepository) {
         this.postRepository = postRepository;
         this.commentRepository = commentRepository;
         this.hashtagRepository = hashtagRepository;
+        this.communityRepository = communityRepository;
+        this.flagRepository = flagRepository;
         this.userRepository = userRepository;
     }
 
@@ -79,6 +92,44 @@ public class DashboardService {
                     });
                     if (h != null)
                         post.getHashtags().add(h);
+                }
+            }
+        }
+
+        // Community handling (optional) - expect a community name under 'community'
+        Object communityObj = payload.get("community");
+        if (communityObj instanceof String) {
+            String communityName = ((String) communityObj).trim();
+            if (!communityName.isEmpty()) {
+                Community community = communityRepository.findByNameIgnoreCase(communityName).orElseGet(() -> {
+                    try {
+                        return communityRepository.save(new Community(null, communityName));
+                    } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+                        // race: another thread inserted the community; try fetch again
+                        return communityRepository.findByNameIgnoreCase(communityName).orElse(null);
+                    }
+                });
+                if (community != null) {
+                    post.setCommunity(community);
+                }
+            }
+        }
+
+        // Flag handling (optional) - expect a flag name under 'flag'
+        Object flagObj = payload.get("flag");
+        if (flagObj instanceof String) {
+            String flagName = ((String) flagObj).trim();
+            if (!flagName.isEmpty()) {
+                Flag flag = flagRepository.findByNameIgnoreCase(flagName).orElseGet(() -> {
+                    try {
+                        return flagRepository.save(new Flag(null, flagName));
+                    } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+                        // race: another thread inserted the flag; try fetch again
+                        return flagRepository.findByNameIgnoreCase(flagName).orElse(null);
+                    }
+                });
+                if (flag != null) {
+                    post.setFlag(flag);
                 }
             }
         }
@@ -194,6 +245,39 @@ public class DashboardService {
         for (Hashtag h : p.getHashtags())
             tags.add(Map.of("id", h.getId(), "name", h.getName()));
         m.put("hashtags", tags);
+
+        // Include community details
+        if (p.getCommunity() != null) {
+            Map<String, Object> communityMap = new HashMap<>();
+            communityMap.put("id", p.getCommunity().getId());
+            communityMap.put("name", p.getCommunity().getName());
+            m.put("community", communityMap);
+        } else {
+            m.put("community", null);
+        }
+
+        // Include flag details
+        if (p.getFlag() != null) {
+            Map<String, Object> flagMap = new HashMap<>();
+            flagMap.put("id", p.getFlag().getId());
+            flagMap.put("name", p.getFlag().getName());
+            m.put("flag", flagMap);
+        } else {
+            m.put("flag", null);
+        }
+
+        // Include count of only top-level comments (where parent is NULL) for list
+        // views
+        int commentCount = 0;
+        if (p.getComments() != null) {
+            for (Comment c : p.getComments()) {
+                if (c.getParent() == null) {
+                    commentCount++;
+                }
+            }
+        }
+        m.put("commentCount", commentCount);
+
         return m;
     }
 
@@ -220,5 +304,49 @@ public class DashboardService {
         m.put("replyCount", replyCount);
 
         return m;
+    }
+
+    public List<Map<String, Object>> getAllCommunities() {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Community c : communityRepository.findAll()) {
+            Map<String, Object> m = new HashMap<>();
+            m.put("id", c.getId());
+            m.put("name", c.getName());
+            out.add(m);
+        }
+        return out;
+    }
+
+    public Map<String, Object> getCommunitiesPaginated(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
+        Page<Community> communityPage = communityRepository.findAll(pageable);
+
+        List<Map<String, Object>> communities = new ArrayList<>();
+        for (Community c : communityPage.getContent()) {
+            Map<String, Object> m = new HashMap<>();
+            m.put("id", c.getId());
+            m.put("name", c.getName());
+            communities.add(m);
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("content", communities);
+        response.put("currentPage", communityPage.getNumber());
+        response.put("totalPages", communityPage.getTotalPages());
+        response.put("totalElements", communityPage.getTotalElements());
+        response.put("hasNext", communityPage.hasNext());
+
+        return response;
+    }
+
+    public List<Map<String, Object>> getAllFlags() {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Flag f : flagRepository.findAll()) {
+            Map<String, Object> m = new HashMap<>();
+            m.put("id", f.getId());
+            m.put("name", f.getName());
+            out.add(m);
+        }
+        return out;
     }
 }

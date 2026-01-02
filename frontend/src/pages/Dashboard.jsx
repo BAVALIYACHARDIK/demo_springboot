@@ -5,23 +5,44 @@ import { Navbar, LeftSidebar, RightSidebar } from "../components/LayoutComponent
 import { PostList } from "../components/PostList";
 import { PostDetail } from "../components/PostDetail";
 
+// Helper function to get flag icon
+const getFlagIcon = (flagName) => {
+  const flagIcons = {
+    "Error": "🔴",
+    "Doubt": "❓",
+    "Meme": "😂",
+    "How To": "📖",
+  };
+  return flagIcons[flagName] || "🏳️";
+};
+
 export function Dashboard() {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({ authorId: "", title: "", hashtags: "", description: "" });
+  const [form, setForm] = useState({ authorId: "", title: "", community: "", flag: "", description: "" });
   const [selectedPostId, setSelectedPostId] = useState(null);
+  const [communities, setCommunities] = useState([]);
+  const [flags, setFlags] = useState([]);
 
   useEffect(() => {
-    // load initial posts
+    // load initial posts, communities, and flags
     (async () => {
       try {
-        const res = await API.getAllPosts();
-        setResults(Array.isArray(res) ? res : []);
+        const [postsRes, communitiesRes, flagsRes] = await Promise.all([
+          API.getAllPosts(),
+          API.getAllCommunities(),
+          API.getAllFlags()
+        ]);
+        setResults(Array.isArray(postsRes) ? postsRes : []);
+        setCommunities(Array.isArray(communitiesRes) ? communitiesRes : []);
+        setFlags(Array.isArray(flagsRes) ? flagsRes : []);
       } catch (e) {
-        console.error("Failed to load posts", e);
+        console.error("Failed to load data", e);
         setResults([]);
+        setCommunities([]);
+        setFlags([]);
       }
     })();
   }, []);
@@ -44,7 +65,7 @@ export function Dashboard() {
   const openModal = () => setShowModal(true);
   const closeModal = () => {
     setShowModal(false);
-    setForm({ authorId: "", title: "", hashtags: "", description: "" });
+    setForm({ authorId: "", title: "", community: "", flag: "", description: "" });
   };
 
   const submitPost = async () => {
@@ -54,7 +75,8 @@ export function Dashboard() {
     };
     const uid = localStorage.getItem('user_id');
     if (uid) payload.authorId = Number(uid);
-    if (form.hashtags) payload.hashtags = form.hashtags;
+    if (form.community) payload.community = form.community;
+    if (form.flag) payload.flag = form.flag;
     try {
       await API.createPost(payload);
       const res = await API.getAllPosts();
@@ -111,18 +133,42 @@ export function Dashboard() {
       {showModal && (
         <div className="modal-overlay" role="dialog" aria-modal="true">
           <div className="modal">
-            <h3>New Post</h3>
+            <h3>Create New Post</h3>
             <div className="modal-body">
               <div className="modal-field">
-                <input className="modal-input" placeholder="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+                <label className="modal-label">Title</label>
+                <input className="modal-input" placeholder="Enter post title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+              </div>
+
+              <div className="modal-row-inline">
+                <div className="modal-field">
+                  <label className="modal-label">Community</label>
+                  <select className="modal-select" value={form.community} onChange={(e) => setForm({ ...form, community: e.target.value })}>
+                    <option value="">Select a community...</option>
+                    {communities.map((community) => (
+                      <option key={community.id} value={community.name}>
+                        {community.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="modal-field">
+                  <label className="modal-label">Flag</label>
+                  <select className="modal-select" value={form.flag} onChange={(e) => setForm({ ...form, flag: e.target.value })}>
+                    <option value="">Select a flag...</option>
+                    {flags.map((flag) => (
+                      <option key={flag.id} value={flag.name}>
+                        {getFlagIcon(flag.name)} {flag.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div className="modal-field">
-                <input className="modal-input" placeholder="Hashtags (e.g. @one @two)" value={form.hashtags} onChange={(e) => setForm({ ...form, hashtags: e.target.value })} />
-              </div>
-
-              <div className="modal-field">
-                <textarea className="modal-textarea" placeholder="Description" rows={6} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+                <label className="modal-label">Description</label>
+                <textarea className="modal-textarea" placeholder="Write your detailed description here..." rows={6} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
               </div>
 
               <div className="modal-actions">
