@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
     List<Post> findByTitleContainingIgnoreCaseOrBodyContainingIgnoreCase(String title, String body);
+
+    List<Post> findByCommunityId(Long communityId);
 }

@@ -23,29 +23,32 @@ export function Dashboard() {
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ authorId: "", title: "", community: "", flag: "", description: "" });
   const [selectedPostId, setSelectedPostId] = useState(null);
+  const [selectedCommunityId, setSelectedCommunityId] = useState(null);
   const [communities, setCommunities] = useState([]);
   const [flags, setFlags] = useState([]);
 
+  // Load posts when community filter changes
   useEffect(() => {
-    // load initial posts, communities, and flags
-    (async () => {
-      try {
-        const [postsRes, communitiesRes, flagsRes] = await Promise.all([
-          API.getAllPosts(),
-          API.getAllCommunities(),
-          API.getAllFlags()
-        ]);
-        setResults(Array.isArray(postsRes) ? postsRes : []);
-        setCommunities(Array.isArray(communitiesRes) ? communitiesRes : []);
-        setFlags(Array.isArray(flagsRes) ? flagsRes : []);
-      } catch (e) {
-        console.error("Failed to load data", e);
-        setResults([]);
-        setCommunities([]);
-        setFlags([]);
-      }
-    })();
-  }, []);
+    loadPosts(selectedCommunityId);
+  }, [selectedCommunityId]);
+
+  const loadPosts = async (communityId) => {
+    try {
+      const res = await API.getAllPosts({ communityId });
+      setResults(Array.isArray(res) ? res : []);
+    } catch (e) {
+      console.error("Failed to load posts", e);
+      setResults([]);
+    }
+  };
+
+  const handleCommunityClick = (communityId) => {
+    setSelectedCommunityId(communityId);
+  };
+
+  const handleClearFilter = () => {
+    setSelectedCommunityId(null);
+  };
 
   const doSearch = async () => {
     const q = (query || "").trim();
@@ -62,7 +65,24 @@ export function Dashboard() {
     navigate('/auth/login');
   };
 
-  const openModal = () => setShowModal(true);
+  const openModal = async () => {
+    setShowModal(true);
+    // Lazy load communities and flags only when modal opens
+    if (communities.length === 0 || flags.length === 0) {
+      try {
+        const [communitiesRes, flagsRes] = await Promise.all([
+          API.getAllCommunities(),
+          API.getAllFlags()
+        ]);
+        setCommunities(Array.isArray(communitiesRes) ? communitiesRes : []);
+        setFlags(Array.isArray(flagsRes) ? flagsRes : []);
+      } catch (e) {
+        console.error("Failed to load modal data", e);
+        setCommunities([]);
+        setFlags([]);
+      }
+    }
+  };
   const closeModal = () => {
     setShowModal(false);
     setForm({ authorId: "", title: "", community: "", flag: "", description: "" });
@@ -79,8 +99,7 @@ export function Dashboard() {
     if (form.flag) payload.flag = form.flag;
     try {
       await API.createPost(payload);
-      const res = await API.getAllPosts();
-      setResults(Array.isArray(res) ? res : []);
+      await loadPosts(selectedCommunityId);
       closeModal();
     } catch (e) {
       console.error("post failed", e);
@@ -118,6 +137,13 @@ export function Dashboard() {
 
               {query && <div className="search-info">Results for "{query}"</div>}
               
+              {selectedCommunityId && (
+                <div className="filter-info">
+                  <span>Filtered by community</span>
+                  <button className="clear-filter-btn" onClick={handleClearFilter}>✕ Clear filter</button>
+                </div>
+              )}
+              
               {results.length === 0 ? (
                 <div className="no-posts">{query ? 'No results found.' : 'No posts yet. Create your first post!'}</div>
               ) : (
@@ -127,7 +153,7 @@ export function Dashboard() {
           )}
         </main>
         
-        <RightSidebar onAddPost={openModal} />
+        <RightSidebar onAddPost={openModal} onCommunityClick={handleCommunityClick} selectedCommunityId={selectedCommunityId} />
       </div>
 
       {showModal && (

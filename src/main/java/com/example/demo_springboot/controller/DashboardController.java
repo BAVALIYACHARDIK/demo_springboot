@@ -29,10 +29,11 @@ public class DashboardController {
         return ResponseEntity.ok(dashboardService.search(q));
     }
 
-    // GET /api/posts
+    // GET /api/posts?communityId=123
     @GetMapping("/posts")
-    public ResponseEntity<List<Map<String, Object>>> getAllPosts() {
-        return ResponseEntity.ok(dashboardService.getAllPosts());
+    public ResponseEntity<List<Map<String, Object>>> getAllPosts(
+            @RequestParam(required = false) Long communityId) {
+        return ResponseEntity.ok(dashboardService.getAllPosts(communityId));
     }
 
     // GET /api/posts/{id}

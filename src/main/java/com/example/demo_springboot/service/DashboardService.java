@@ -140,7 +140,7 @@ public class DashboardService {
 
     public List<Map<String, Object>> search(String q) {
         if (q == null || q.trim().isEmpty())
-            return getAllPosts();
+            return getAllPosts(null);
         List<Post> found = postRepository.findByTitleContainingIgnoreCaseOrBodyContainingIgnoreCase(q, q);
         List<Map<String, Object>> out = new ArrayList<>();
         for (Post p : found)
@@ -148,9 +148,17 @@ public class DashboardService {
         return out;
     }
 
-    public List<Map<String, Object>> getAllPosts() {
+    public List<Map<String, Object>> getAllPosts(Long communityId) {
         List<Map<String, Object>> out = new ArrayList<>();
-        for (Post p : postRepository.findAll())
+        List<Post> posts;
+
+        if (communityId != null) {
+            posts = postRepository.findByCommunityId(communityId);
+        } else {
+            posts = postRepository.findAll();
+        }
+
+        for (Post p : posts)
             out.add(mapPost(p));
         return out;
     }

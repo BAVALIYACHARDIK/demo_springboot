@@ -46,8 +46,14 @@ export async function search(q = "", { signal } = {}) {
 	return await request(`${BASE}/search?${params.toString()}`, { method: "GET", signal });
 }
 
-export async function getAllPosts({ signal } = {}) {
-	return await request(`${BASE}/posts`, { method: "GET", signal });
+export async function getAllPosts({ communityId, signal } = {}) {
+	const params = new URLSearchParams();
+	if (communityId != null) {
+		params.set("communityId", String(communityId));
+	}
+	const queryString = params.toString();
+	const url = queryString ? `${BASE}/posts?${queryString}` : `${BASE}/posts`;
+	return await request(url, { method: "GET", signal });
 }
 
 export async function getPost(id, { signal } = {}) {

@@ -63,7 +63,7 @@ export function LeftSidebar() {
   );
 }
 
-export function RightSidebar({ onAddPost }) {
+export function RightSidebar({ onAddPost, onCommunityClick, selectedCommunityId }) {
   const [communities, setCommunities] = useState([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -121,7 +121,15 @@ export function RightSidebar({ onAddPost }) {
           onScroll={handleScroll}
         >
           {communities.map((community) => (
-            <a href="#" key={community.id} className="community-item">
+            <a 
+              href="#" 
+              key={community.id} 
+              className={`community-item ${selectedCommunityId === community.id ? 'active' : ''}`}
+              onClick={(e) => {
+                e.preventDefault();
+                onCommunityClick(community.id);
+              }}
+            >
               <div className="community-info">
                 <div className="community-details">
                   <div className="community-name">{community.name}</div>
