@@ -21,9 +21,9 @@ export function Register() {
                 setName('');
                 setEmail('');
                 setPassword('');
-                // Optional: Redirect to login after 2 seconds so they see the success message
+                // Optional: Redirect to dashboard after 1 second so they see the success message
                 setTimeout(() => {
-                    navigate('/SweetDashboard');
+                    navigate('/dashboard');
                 }, 1000);
             }
             console.log('register response', response);
@@ -35,7 +35,8 @@ export function Register() {
     };
 
     return (
-        <div className="auth-container">
+        <div className="auth-page">
+            <div className="auth-container">
             <h2>Register</h2>
             <div className="auth-redirect">
                 <span>Already have an account?</span>
@@ -80,6 +81,7 @@ export function Register() {
             {status === 'loading' && <p className="status-message">Registering…</p>}
             {status && status.ok && <p className="status-message success">Registered successfully</p>}
             {status && status.ok === false && <p className="status-message error">{status.error}</p>}
+            </div>
         </div>
     );
 }

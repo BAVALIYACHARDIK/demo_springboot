@@ -36,5 +36,10 @@ public class AuthController {
         String token = request.get("token");
         return authService.validateAdminToken(token);
     }
-}
 
+    // @PostMapping("/decode")
+    // public ResponseEntity<Map<String, Object>> decodeToken(@RequestBody Map<String, String> request) {
+    //     String token = request.get("token");
+    //     return authService.decodeToken(token);
+    // }
+}

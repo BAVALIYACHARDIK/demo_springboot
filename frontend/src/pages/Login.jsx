@@ -13,14 +13,18 @@ export function Login(){
         setStatus('loading');
         try {
             const response = await loginuser({ email, password });
-            if (response && response.message) {
-                setStatus({ ok: false, error: response.message });
-            } else {
-                setEmail('');
-                setPassword('');
-                setStatus({ ok: true, data: response });
-                navigate('/SweetDashboard');
-            }
+                // backend returns an AuthResponse that includes a token and a message
+                // success: token is present; failure: message contains error
+                if (response && response.token) {
+                    setEmail('');
+                    setPassword('');
+                    setStatus({ ok: true, data: response });
+                    navigate('/dashboard');
+                } else if (response && response.message) {
+                    setStatus({ ok: false, error: response.message });
+                } else {
+                    setStatus({ ok: false, error: 'Login failed' });
+                }
             console.log('login response', response);
 
         } catch (err) {
@@ -30,7 +34,8 @@ export function Login(){
     };
 
     return (
-        <div className="auth-container">
+        <div className="auth-page">
+            <div className="auth-container">
             <h2>Login</h2>
             <div className="auth-redirect">
                 <span>Don't have an account?</span>
@@ -65,6 +70,7 @@ export function Login(){
             {status === 'loading' && <p className="status-message">Logging in…</p>}
             {status && status.ok && <p className="status-message success">Logged in successfully</p>}
             {status && status.ok === false && <p className="status-message error">{status.error}</p>}
+            </div>
         </div>
     );
 }

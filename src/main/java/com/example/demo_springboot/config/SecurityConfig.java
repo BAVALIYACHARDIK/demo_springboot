@@ -28,23 +28,19 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
-                .cors(Customizer.withDefaults())
-                .authorizeHttpRequests(auth -> auth
-                        // 1. Public endpoints
-                        .requestMatchers("/api/auth/**", "/error").permitAll()
-                        .requestMatchers("/api/sweets/**", "/error").permitAll()
-
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
-                        // 2. Admin endpoints (Requires ROLE_ADMIN set in the filter)
-                        .requestMatchers("/api/admin/**").hasAuthority("admin")
-
-                        // 3. All other requests
-                        .anyRequest().authenticated()
-                )
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+            .csrf(csrf -> csrf.disable())
+            .cors(Customizer.withDefaults())
+            .sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .anyRequest().authenticated()
+            )
+            // ✅ VERY IMPORTANT
+            .addFilterBefore(jwtAuthFilter,
+                    UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

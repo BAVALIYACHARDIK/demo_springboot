@@ -23,12 +23,12 @@ public class AuthService {
     private final UserRepository userRepository;
 
     @Value("${jwt.secret}")
-    private String jwtSecret ;
+    private String jwtSecret;
     @Value("${admin.role}")
     private String admin_role;
     @Value("${admin.pass}")
     private String admin_pass;
-    private String role="user";
+    private String role = "user";
 
     public AuthService(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -39,14 +39,13 @@ public class AuthService {
             return new AuthResponse("Email already in use");
         }
 
-        if(request.getName().equals(admin_role) && request.getPassword().equals(admin_pass)){
-            role="admin";
+        if (request.getName().equals(admin_role) && request.getPassword().equals(admin_pass)) {
+            role = "admin";
         }
 
         User user = new User(null, request.getName(), request.getEmail(), request.getPassword(), role);
         User savedUser = userRepository.save(user);
-        String token = generateToken(savedUser.getId(), savedUser.getRole());
-
+        String token = generateToken(String.valueOf(savedUser.getId()), savedUser.getRole());
 
         return new AuthResponse(
                 token,
@@ -65,7 +64,7 @@ public class AuthService {
         if (!user.getPassword().equals(request.getPassword())) {
             return new AuthResponse("Invalid credentials");
         }
-        String token = generateToken(user.getId(), user.getRole());
+        String token = generateToken(String.valueOf(user.getId()), user.getRole());
         return new AuthResponse(
                 token,
                 user.getName(),
@@ -74,7 +73,7 @@ public class AuthService {
                 "login successful");
     }
 
-    public  ResponseEntity<Map<String, String>> validateAdminToken(String token) {
+    public ResponseEntity<Map<String, String>> validateAdminToken(String token) {
         try {
             Claims claims = Jwts.parser()
                     .verifyWith(getSignInKey())
@@ -102,7 +101,8 @@ public class AuthService {
 
     private String generateToken(String subject, String role) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + 60*60*10*6); // 60 minutes
+        // 1 hour expiry (milliseconds)
+        Date expiryDate = new Date(now.getTime() + 60L * 60L * 10000L);
         return Jwts.builder()
                 .subject(subject)
                 .claim("role", role)
@@ -116,4 +116,22 @@ public class AuthService {
         byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
         return Keys.hmacShaKeyFor(keyBytes);
     }
+
+    // public ResponseEntity<Map<String, Object>> decodeToken(String token) {
+    // try {
+    // Claims claims = Jwts.parser()
+    // .verifyWith(getSignInKey())
+    // .build()
+    // .parseSignedClaims(token)
+    // .getPayload();
+    // Map<String, Object> out = new HashMap<>();
+    // out.put("sub", claims.getSubject());
+    // out.put("role", claims.get("role", String.class));
+    // out.put("exp", claims.getExpiration());
+    // return ResponseEntity.ok(out);
+    // } catch (Exception e) {
+    // return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error",
+    // "Invalid token"));
+    // }
+    // }
 }
