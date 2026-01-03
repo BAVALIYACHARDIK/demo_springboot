@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import API from "../services/Dashboardapi";
 import { useNavigate } from "react-router-dom";
 import { Navbar, LeftSidebar, RightSidebar } from "../components/LayoutComponents";
@@ -26,6 +26,9 @@ export function Dashboard() {
   const [selectedCommunityId, setSelectedCommunityId] = useState(null);
   const [communities, setCommunities] = useState([]);
   const [flags, setFlags] = useState([]);
+  const [communitySuggestions, setCommunitySuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const throttleTimerRef = useRef(null);
 
   // Load posts when community filter changes
   useEffect(() => {
@@ -67,18 +70,13 @@ export function Dashboard() {
 
   const openModal = async () => {
     setShowModal(true);
-    // Lazy load communities and flags only when modal opens
-    if (communities.length === 0 || flags.length === 0) {
+    // Lazy load flags only when modal opens
+    if (flags.length === 0) {
       try {
-        const [communitiesRes, flagsRes] = await Promise.all([
-          API.getAllCommunities(),
-          API.getAllFlags()
-        ]);
-        setCommunities(Array.isArray(communitiesRes) ? communitiesRes : []);
+        const flagsRes = await API.getAllFlags();
         setFlags(Array.isArray(flagsRes) ? flagsRes : []);
       } catch (e) {
-        console.error("Failed to load modal data", e);
-        setCommunities([]);
+        console.error("Failed to load flags", e);
         setFlags([]);
       }
     }
@@ -86,6 +84,51 @@ export function Dashboard() {
   const closeModal = () => {
     setShowModal(false);
     setForm({ authorId: "", title: "", community: "", flag: "", description: "" });
+    setCommunitySuggestions([]);
+    setShowSuggestions(false);
+    if (throttleTimerRef.current) {
+      clearTimeout(throttleTimerRef.current);
+    }
+  };
+
+  // Throttled search function for communities
+  const searchCommunitiesThrottled = (searchText) => {
+    // Clear any existing timer
+    if (throttleTimerRef.current) {
+      clearTimeout(throttleTimerRef.current);
+    }
+
+    // Set new timer for 350ms
+    throttleTimerRef.current = setTimeout(async () => {
+      const trimmedText = searchText.trim();
+      if (trimmedText.length === 0) {
+        setCommunitySuggestions([]);
+        setShowSuggestions(false);
+        return;
+      }
+
+      try {
+        const results = await API.searchCommunities(trimmedText);
+        setCommunitySuggestions(Array.isArray(results) ? results : []);
+        setShowSuggestions(true);
+      } catch (e) {
+        console.error("Failed to search communities", e);
+        setCommunitySuggestions([]);
+        setShowSuggestions(false);
+      }
+    }, 350);
+  };
+
+  const handleCommunityInputChange = (e) => {
+    const value = e.target.value;
+    setForm({ ...form, community: value });
+    searchCommunitiesThrottled(value);
+  };
+
+  const handleSuggestionClick = (communityName) => {
+    setForm({ ...form, community: communityName });
+    setShowSuggestions(false);
+    setCommunitySuggestions([]);
   };
 
   const submitPost = async () => {
@@ -167,16 +210,32 @@ export function Dashboard() {
               </div>
 
               <div className="modal-row-inline">
-                <div className="modal-field">
+                <div className="modal-field" style={{ position: 'relative' }}>
                   <label className="modal-label">Community</label>
-                  <select className="modal-select" value={form.community} onChange={(e) => setForm({ ...form, community: e.target.value })}>
-                    <option value="">Select a community...</option>
-                    {communities.map((community) => (
-                      <option key={community.id} value={community.name}>
-                        {community.name}
-                      </option>
-                    ))}
-                  </select>
+                  <input 
+                    className="modal-input" 
+                    placeholder="Type to search communities..." 
+                    value={form.community} 
+                    onChange={handleCommunityInputChange}
+                    onFocus={() => {
+                      if (form.community.trim() && communitySuggestions.length > 0) {
+                        setShowSuggestions(true);
+                      }
+                    }}
+                  />
+                  {showSuggestions && communitySuggestions.length > 0 && (
+                    <div className="autocomplete-suggestions">
+                      {communitySuggestions.map((community) => (
+                        <div 
+                          key={community.id} 
+                          className="autocomplete-item"
+                          onClick={() => handleSuggestionClick(community.name)}
+                        >
+                          {community.name}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="modal-field">

@@ -80,6 +80,12 @@ public class DashboardController {
         return ResponseEntity.ok(dashboardService.getAllCommunities());
     }
 
+    // GET /api/communities/search?q=
+    @GetMapping("/communities/search")
+    public ResponseEntity<List<Map<String, Object>>> searchCommunities(@RequestParam(defaultValue = "") String q) {
+        return ResponseEntity.ok(dashboardService.searchCommunities(q));
+    }
+
     // GET /api/communities/paginated?page=0&size=15
     @GetMapping("/communities/paginated")
     public ResponseEntity<Map<String, Object>> getCommunitiesPaginated(

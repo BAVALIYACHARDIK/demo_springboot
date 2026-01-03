@@ -325,6 +325,29 @@ public class DashboardService {
         return out;
     }
 
+    public List<Map<String, Object>> searchCommunities(String query) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        String searchQuery = query == null ? "" : query.trim();
+
+        List<Community> communities;
+        if (searchQuery.isEmpty()) {
+            // Return empty list if no query provided
+            return out;
+        } else {
+            // Search communities by name and limit to top 5 results
+            Pageable topFive = PageRequest.of(0, 5, Sort.by("name").ascending());
+            communities = communityRepository.findByNameContainingIgnoreCase(searchQuery, topFive);
+        }
+
+        for (Community c : communities) {
+            Map<String, Object> m = new HashMap<>();
+            m.put("id", c.getId());
+            m.put("name", c.getName());
+            out.add(m);
+        }
+        return out;
+    }
+
     public Map<String, Object> getCommunitiesPaginated(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
         Page<Community> communityPage = communityRepository.findAll(pageable);

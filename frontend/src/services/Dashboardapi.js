@@ -84,6 +84,12 @@ export async function getAllCommunities({ signal } = {}) {
 	return await request(`${BASE}/communities`, { method: "GET", signal });
 }
 
+export async function searchCommunities(query = "", { signal } = {}) {
+	const params = new URLSearchParams();
+	params.set("q", String(query ?? ""));
+	return await request(`${BASE}/communities/search?${params.toString()}`, { method: "GET", signal });
+}
+
 export async function getCommunitiesPaginated(page = 0, size = 15, { signal } = {}) {
 	const params = new URLSearchParams();
 	params.set("page", String(page));
@@ -98,6 +104,7 @@ export async function getAllFlags({ signal } = {}) {
 export default {
 	createPost,
 	search,
+	searchCommunities,
 	getAllPosts,
 	getPost,
 	getPostComments,
