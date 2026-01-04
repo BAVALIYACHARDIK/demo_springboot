@@ -101,6 +101,22 @@ export async function getAllFlags({ signal } = {}) {
 	return await request(`${BASE}/flags`, { method: "GET", signal });
 }
 
+export async function toggleCommunityMembership(communityId, userId, { signal } = {}) {
+	if (communityId == null) throw new Error("communityId is required");
+	if (userId == null) throw new Error("userId is required");
+	return await request(`${BASE}/communities/${encodeURIComponent(String(communityId))}/toggle-membership`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ userId }),
+		signal,
+	});
+}
+
+export async function getUserJoinedCommunities(userId, { signal } = {}) {
+	if (userId == null) throw new Error("userId is required");
+	return await request(`${BASE}/users/${encodeURIComponent(String(userId))}/joined-communities`, { method: "GET", signal });
+}
+
 export default {
 	createPost,
 	search,
@@ -113,4 +129,6 @@ export default {
 	getAllCommunities,
 	getCommunitiesPaginated,
 	getAllFlags,
+	toggleCommunityMembership,
+	getUserJoinedCommunities,
 };

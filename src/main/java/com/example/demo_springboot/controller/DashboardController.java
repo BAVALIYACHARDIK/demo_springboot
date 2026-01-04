@@ -99,4 +99,28 @@ public class DashboardController {
     public ResponseEntity<List<Map<String, Object>>> getAllFlags() {
         return ResponseEntity.ok(dashboardService.getAllFlags());
     }
+
+    // POST /api/communities/{communityId}/toggle-membership
+    @PostMapping("/communities/{communityId}/toggle-membership")
+    public ResponseEntity<?> toggleCommunityMembership(
+            @PathVariable Long communityId,
+            @RequestBody Map<String, Object> payload) {
+        try {
+            Object userIdObj = payload.get("userId");
+            if (userIdObj == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "userId is required"));
+            }
+            Long userId = Long.parseLong(String.valueOf(userIdObj));
+            Map<String, Object> result = dashboardService.toggleCommunityMembership(userId, communityId);
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // GET /api/users/{userId}/joined-communities
+    @GetMapping("/users/{userId}/joined-communities")
+    public ResponseEntity<List<Map<String, Object>>> getUserJoinedCommunities(@PathVariable Long userId) {
+        return ResponseEntity.ok(dashboardService.getUserJoinedCommunities(userId));
+    }
 }

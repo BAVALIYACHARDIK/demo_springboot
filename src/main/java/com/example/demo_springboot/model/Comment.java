@@ -40,7 +40,8 @@ public class Comment {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id")
     private User author;
-
+    
+    // Removing at the end
     // 🔹 Parent comment (NULL for top-level)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude

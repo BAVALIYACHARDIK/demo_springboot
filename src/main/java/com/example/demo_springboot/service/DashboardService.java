@@ -141,7 +141,8 @@ public class DashboardService {
     public List<Map<String, Object>> search(String q) {
         if (q == null || q.trim().isEmpty())
             return getAllPosts(null);
-        List<Post> found = postRepository.findByTitleContainingIgnoreCaseOrBodyContainingIgnoreCase(q, q);
+        List<Post> found = postRepository
+                .findByTitleContainingIgnoreCaseOrBodyContainingIgnoreCaseOrderByCreatedAtDesc(q);
         List<Map<String, Object>> out = new ArrayList<>();
         for (Post p : found)
             out.add(mapPost(p));
@@ -153,9 +154,9 @@ public class DashboardService {
         List<Post> posts;
 
         if (communityId != null) {
-            posts = postRepository.findByCommunityId(communityId);
+            posts = postRepository.findByCommunityIdOrderByCreatedAtDesc(communityId);
         } else {
-            posts = postRepository.findAll();
+            posts = postRepository.findAllOrderByCreatedAtDesc();
         }
 
         for (Post p : posts)
@@ -377,6 +378,43 @@ public class DashboardService {
             m.put("id", f.getId());
             m.put("name", f.getName());
             out.add(m);
+        }
+        return out;
+    }
+
+    public Map<String, Object> toggleCommunityMembership(Long userId, Long communityId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        Community community = communityRepository.findById(communityId)
+                .orElseThrow(() -> new IllegalArgumentException("Community not found"));
+
+        boolean isJoined;
+        if (user.getJoinedCommunities().contains(community)) {
+            user.getJoinedCommunities().remove(community);
+            isJoined = false;
+        } else {
+            user.getJoinedCommunities().add(community);
+            isJoined = true;
+        }
+        userRepository.save(user);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("isJoined", isJoined);
+        result.put("communityId", communityId);
+        result.put("communityName", community.getName());
+        return result;
+    }
+
+    public List<Map<String, Object>> getUserJoinedCommunities(Long userId) {
+        User user = userRepository.findById(userId).orElse(null);
+        List<Map<String, Object>> out = new ArrayList<>();
+        if (user != null && user.getJoinedCommunities() != null) {
+            for (Community c : user.getJoinedCommunities()) {
+                Map<String, Object> m = new HashMap<>();
+                m.put("id", c.getId());
+                m.put("name", c.getName());
+                out.add(m);
+            }
         }
         return out;
     }
